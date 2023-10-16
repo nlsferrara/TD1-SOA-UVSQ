@@ -1,13 +1,16 @@
 {
-  "PrenomClient": "John",
-  "NomClient": "Doe",
-  "Adresse": "123 Rue de la Liberté, 75001 Paris, France",
-  "Email": "john.doe@email.com",
-  "NumeroTelephone": "+33 123 456 789",
-  "MontantPretDemande": 200000,
-  "DureePret": 20,
-  "DescriptionPropriete": "Maison à deux étages avec jardin, située dans un quartier résidentiel calme",
-  "RevenuMensuel": 5000,
-  "DepensesMensuelles": 3000
-}
-    
+    "PrenomClient": "John",
+    "NomClient": "Doe",
+    "Adresse": {
+      "Rue": "123, rue de la Rue",
+      "Ville": "Villeville",
+      "CodePostal": "75000",
+      "Pays": "France"},
+    "Email": "john.doe@email.com",
+    "NumeroTelephone": "+33 123 456 789",
+    "MontantPretDemande": 200000,
+    "DureePret": 20,
+    "DescriptionPropriete": "Maison à deux étages avec jardin, située dans un quartier résidentiel calme",
+    "RevenuMensuel": 5000,
+    "DepensesMensuelles": 3000
+  }
