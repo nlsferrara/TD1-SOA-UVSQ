@@ -75,14 +75,14 @@ if __name__ == '__main__':
     root = tree.getroot()
 
     application = Application([VerifSolvabilite],
-                              tns='verifSolvabilite',
+                              tns='VerifSolvabilite',
                               in_protocol=Soap11(validator='lxml'),
                               out_protocol=Soap11())
 
     wsgi_app = WsgiApplication(application)
 
     twisted_apps = [
-        (wsgi_app, b'verifSolvabilite')
+        (wsgi_app, b'VerifSolvabilite')
     ]
 
-    sys.exit(run_twisted(twisted_apps, 8000))
+    sys.exit(run_twisted(twisted_apps, 8001))

@@ -182,7 +182,7 @@ def lecture_bdd(xml_db='demande_pret_Doe.xml'):
 
 def to_service_verification_solvabilite():
     # Créez un client SOAP pour le service solvabilité
-    url = "http://localhost:8000/VerifSolvabilite?wsdl"
+    url = "http://localhost:8001/VerifSolvabilite?wsdl"
     client = Client(url)
     
     informations_structurees = lecture_bdd()
@@ -200,7 +200,7 @@ def to_service_verification_solvabilite():
 
     try:
         # Appelez la méthode du service en lui passant le XML comme argument
-        response = client.service.ExtraireInformations(tree)
+        response = client.service.calculateScore(tree)
         # Vérifiez la réponse du service
         print("Réponse du service solvabilité:")
         print(response)
@@ -217,7 +217,7 @@ def to_service_evaluation_propriete(informations_structurees):
   
 if __name__ == '__main__':
     application = Application([ServiceExtractionInformation],
-                              tns='mon_namespace',
+                              tns='ServiceExtractionInformation',
                               in_protocol=Soap11(validator='lxml'),
                               out_protocol=Soap11())
 
