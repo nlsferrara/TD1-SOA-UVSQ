@@ -2,7 +2,7 @@ from suds.client import Client
 from suds import WebFault
 
 # Créez un client SOAP pour votre service
-url = "http://localhost:8000/ServiceExtractionInformation?wsdl"  # Assurez-vous d'ajuster l'URL de votre service WSDL
+url = "http://localhost:8000/ServiceExtractionInformation?wsdl"
 client = Client(url)
 
 # data prend la valeur du XML à envoyer 'johndoe.xml'
