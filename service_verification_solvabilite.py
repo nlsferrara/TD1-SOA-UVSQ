@@ -26,8 +26,8 @@ def getInfoClientBureauCredit(idClient):
 
 def getClientId(nomClient, prenomClient):
     for client in root.findall('Client'):
-        prenom = client.find('Nom/PrenomClient').text
-        nom = client.find('Nom/NomClient').text
+        prenom = client.find('.//PrenomClient').text
+        nom = client.find('.//NomClient').text
         if prenom == prenomClient and nom == nomClient:
             return client.find('ID').text
     return "Client non trouvé"
@@ -37,14 +37,11 @@ class VerifSolvabilite(ServiceBase):
 
     @rpc(Unicode, _returns=Integer)
     def calculateScore(ctx, tree2):
-        print(type(tree2))
-        tree2 = tree2.decode('utf-8')
         tree2 = ET.fromstring(tree2)
-        print(type(tree2))
-        nom = tree2.find('DemandePret/NomClient')
-        print(nom)
-        prenom = tree2.find('DemandePret/PrenomClient')
+        nom = tree2.find('.//NomClient').text
+        prenom = tree2.find('.//PrenomClient').text
         infoClient = getInfoClientBureauCredit(getClientId(nom, prenom))
+        print('infoClient ', infoClient)
         score = 0
         # Votre logique de calcul de score ici
         dette = int(infoClient['dette'])

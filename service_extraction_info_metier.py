@@ -197,7 +197,7 @@ def to_service_verification_solvabilite():
     depenses_mensuelles = ET.SubElement(root, 'DepensesMensuelles')
     depenses_mensuelles.text = str(informations_structurees['DepensesMensuelles'])
     tree = ET.tostring(root)
-    print(tree)
+    tree = tree.decode('utf-8')
 
     try:
         # Appelez la méthode du service en lui passant le XML comme argument
