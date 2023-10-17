@@ -24,20 +24,27 @@ def getInfoClientBureauCredit(idClient):
     return "Client non trouvé"
 
 
+def getClientId(nomClient, prenomClient):
+    for client in root.findall('Client'):
+        prenom = client.find('Nom/PrenomClient').text
+        nom = client.find('Nom/NomClient').text
+        if prenom == prenomClient and nom == nomClient:
+            return client.find('ID').text
+    return "Client non trouvé"
+
+
 class VerifSolvabilite(ServiceBase):
 
-    @rpc(Unicode, Unicode, _returns=Unicode)
-    def getClientId(ctx, nomClient, prenomClient):
-        for client in root.findall('Client'):
-            prenom = client.find('Nom/PrenomClient').text
-            nom = client.find('Nom/NomClient').text
-            if prenom == prenomClient and nom == nomClient:
-                return client.find('ID').text
-        return "Client non trouvé"
-
-    @rpc(Unicode, Unicode, Unicode, _returns=Integer)
-    def calculateScore(ctx, idClient, revenu, depense):
-        infoClient = getInfoClientBureauCredit(idClient)
+    @rpc(Unicode, _returns=Integer)
+    def calculateScore(ctx, tree2):
+        print(type(tree2))
+        tree2 = tree2.decode('utf-8')
+        tree2 = ET.fromstring(tree2)
+        print(type(tree2))
+        nom = tree2.find('DemandePret/NomClient')
+        print(nom)
+        prenom = tree2.find('DemandePret/PrenomClient')
+        infoClient = getInfoClientBureauCredit(getClientId(nom, prenom))
         score = 0
         # Votre logique de calcul de score ici
         dette = int(infoClient['dette'])
