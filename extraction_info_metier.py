@@ -5,165 +5,123 @@ from spyne.protocol.soap import Soap11
 from spyne.server.wsgi import WsgiApplication
 from spyne.util.wsgi_wrapper import run_twisted
 import xml.etree.ElementTree as ET
-from bs4 import BeautifulSoup
-
-import spacy
-nlp = spacy.load('fr_core_news_sm')
 
 class ServiceExtractionInformation(ServiceBase):
-    def ExtraireInformations(ctx, texte_demande):
-        # 1. Prétraitement du texte
-        texte_demande = pretraitement_texte(texte_demande)
+    @rpc(Unicode, _returns=Unicode)
+    def ExtraireInformations(ctx, demande_xml):
+        informations_structurees=ExtractionInfo(demande_xml)
+        stockage_information(informations_structurees)
+        return 'Demande de prêt enregistrée avec succès'
 
-        # 2. Analyse linguistique
-        informations_extraites = analyse_linguistique(texte_demande)
-
-        # 3. Identification des entités
-        entites_identifiees = identifier_entites(informations_extraites)
-
-        # 4. Extraction des informations
-        informations_structurees = extraire_informations(entites_identifiees)
-
-        # 5. Stockage des informations
-        stocker_informations(informations_structurees)
-
-        # 6. Transmission aux Services Associés (Supposons que cela soit géré par votre infrastructure)
-        # Vous pouvez appeler d'autres services ici si nécessaire.
-
-        # 7. Gestion des Erreurs
-        gerer_erreurs(informations_structurees)
-
-        # 8. Amélioration Continue (Supposons que cela soit géré par votre infrastructure)
-        # Vous pouvez implémenter l'amélioration continue en utilisant des données d'entraînement.
-
-        # Renvoyez le résultat de l'extraction des informations
-        return informations_structurees
-    
-# Fonction de prétraitement du texte
-def pretraitement_texte(texte_demande):
-    with open(texte_demande, 'r') as f:
-        texte_demande = f.read()
-    # Utilisez Beautiful Soup pour nettoyer le texte et le normaliser
-    soup = BeautifulSoup(texte_demande, 'xml')
-    texte_nettoye = soup.get_text()
-    texte_normalise = texte_nettoye.lower()  # Normalisation en minuscules
-
-    return texte_normalise
-
-# Fonction d'analyse linguistique
-def analyse_linguistique(texte_demande):
-    # Analysez le texte à l'aide de spaCy
-    doc = nlp(texte_demande)
-
-    # Exemple : Extraction de phrases ou d'entités pertinentes
-    informations_extraites = [ent.text for ent in doc.ents]
-
-    return informations_extraites
-
-# Fonction d'identification d'entités pertinentes
-def identifier_entites(informations_extraites):
-    # Exemple d'identification d'entités pertinentes (noms, adresses, montants, etc.)
-    entites_identifiees = []
-    for texte in informations_extraites:
-        if est_nom(texte):
-            entites_identifiees.append({'type': 'nom', 'valeur': texte})
-        elif est_adresse(texte):
-            entites_identifiees.append({'type': 'adresse', 'valeur': texte})
-        elif est_montant(texte):
-            entites_identifiees.append({'type': 'montant', 'valeur': texte})
-    return entites_identifiees
-
-# Fonction pour vérifier si le texte est un nom
-def est_nom(texte):
-    # Vous pouvez mettre en œuvre votre propre logique de vérification ici
-    # Par exemple, vérifier si le texte contient des mots correspondant à un nom
-    return True  # Mettez en œuvre votre propre logique de vérification
-
-# Fonction pour vérifier si le texte est une adresse
-def est_adresse(texte):
-    # Vous pouvez mettre en œuvre votre propre logique de vérification ici
-    # Par exemple, vérifier si le texte contient des éléments correspondant à une adresse
-    return True  # Mettez en œuvre votre propre logique de vérification
-
-# Fonction pour vérifier si le texte est un montant
-def est_montant(texte):
-    # Vous pouvez mettre en œuvre votre propre logique de vérification ici
-    # Par exemple, vérifier si le texte ressemble à un montant financier
-    return True  # Mettez en œuvre votre propre logique de vérification
-
-# Fonction d'extraction des informations
-def extraire_informations(entites_identifiees):
-    # Exemple d'extraction d'informations structurées à partir des entités identifiées
-    informations_structurees = {}
-    for entite in entites_identifiees:
-        if entite['type'] == 'nom':
-            informations_structurees['nom_client'] = entite['valeur']
-        elif entite['type'] == 'adresse':
-            informations_structurees['adresse'] = entite['valeur']
-        elif entite['type'] == 'montant':
-            informations_structurees['montant_demande'] = entite['valeur']
-
+def ExtractionInfo(demande_xml):
+    root = ET.parse(demande_xml).getroot()
+    prenom_client = root.find('.//PrenomClient')
+    prenom_client = prenom_client.text if prenom_client is not None else ''
+    nom_client = root.find('.//NomClient')
+    nom_client = nom_client.text if nom_client is not None else ''
+    adresse_rue = root.find('.//Adresse/Rue')
+    adresse_rue = adresse_rue.text if adresse_rue is not None else ''
+    adresse_ville = root.find('.//Adresse/Ville')
+    adresse_ville = adresse_ville.text if adresse_ville is not None else ''
+    adresse_code_postal = root.find('.//Adresse/CodePostal')
+    adresse_code_postal = adresse_code_postal.text if adresse_code_postal is not None else ''
+    adresse_pays = root.find('.//Adresse/Pays')
+    adresse_pays = adresse_pays.text if adresse_pays is not None else ''
+    email = root.find('.//Email')
+    email = email.text if email is not None else ''
+    numero_telephone = root.find('.//NumeroTelephone')
+    numero_telephone = numero_telephone.text if numero_telephone is not None else ''
+    montant_pret_demande = root.find('.//MontantPretDemande')
+    montant_pret_demande = int(montant_pret_demande.text) if montant_pret_demande is not None else 0
+    duree_pret = root.find('.//DureePret')
+    duree_pret = int(duree_pret.text) if duree_pret is not None else 0
+    description_propriete_etage = root.find('.//DescriptionPropriete/Etage')
+    description_propriete_etage = description_propriete_etage.text if description_propriete_etage is not None else ''
+    description_propriete_taille = root.find('.//DescriptionPropriete/Taille')
+    description_propriete_taille = description_propriete_taille.text if description_propriete_taille is not None else ''
+    description_propriete_jardin = root.find('.//DescriptionPropriete/Jardin')
+    description_propriete_jardin = description_propriete_jardin.text if description_propriete_jardin is not None else ''
+    description_propriete_quartier = root.find('.//DescriptionPropriete/Quartier')
+    description_propriete_quartier = description_propriete_quartier.text if description_propriete_quartier is not None else ''
+    description_propriete_tranquilite = root.find('.//DescriptionPropriete/Tranquilite')
+    description_propriete_tranquilite = description_propriete_tranquilite.text if description_propriete_tranquilite is not None else ''
+    revenu_mensuel = root.find('.//RevenuMensuel')
+    revenu_mensuel = int(revenu_mensuel.text) if revenu_mensuel is not None else 0
+    depenses_mensuelles = root.find('.//DepensesMensuelles')
+    depenses_mensuelles = int(depenses_mensuelles.text) if depenses_mensuelles is not None else 0
+    informations_structurees = {
+        'PrenomClient': prenom_client,
+        'NomClient': nom_client,
+        'Adresse': {
+            'Rue': adresse_rue,
+            'Ville': adresse_ville,
+            'CodePostal': adresse_code_postal,
+            'Pays': adresse_pays
+        },
+        'Email': email,
+        'NumeroTelephone': numero_telephone,
+        'MontantPretDemande': montant_pret_demande,
+        'DureePret': duree_pret,
+        'DescriptionPropriete': {
+            'Etage': description_propriete_etage,
+            'Taille': description_propriete_taille,
+            'Jardin': description_propriete_jardin,
+            'Quartier': description_propriete_quartier,
+            'Tranquilite': description_propriete_tranquilite
+        },
+        'RevenuMensuel': revenu_mensuel,
+        'DepensesMensuelles': depenses_mensuelles
+    }
     return informations_structurees
 
-# Fonction pour stocker les informations extraites au format XML
-def stocker_informations(informations_structurees):
-    try:
-        # Crée un élément racine XML
-        root = ET.Element("InformationsPret")
+def stockage_information(informations_structurees):
+    root = ET.Element('DemandePret')
+    prenom_client = ET.SubElement(root, 'PrenomClient')
+    prenom_client.text = informations_structurees['PrenomClient']
+    nom_client = ET.SubElement(root, 'NomClient')
+    nom_client.text = informations_structurees['NomClient']
+    adresse = ET.SubElement(root, 'Adresse')
+    adresse_rue = ET.SubElement(adresse, 'Rue')
+    adresse_rue.text = informations_structurees['Adresse']['Rue']
+    adresse_ville = ET.SubElement(adresse, 'Ville')
+    adresse_ville.text = informations_structurees['Adresse']['Ville']
+    adresse_code_postal = ET.SubElement(adresse, 'CodePostal')
+    adresse_code_postal.text = informations_structurees['Adresse']['CodePostal']
+    adresse_pays = ET.SubElement(adresse, 'Pays')
+    adresse_pays.text = informations_structurees['Adresse']['Pays']
+    email = ET.SubElement(root, 'Email')
+    email.text = informations_structurees['Email']
+    numero_telephone = ET.SubElement(root, 'NumeroTelephone')
+    numero_telephone.text = informations_structurees['NumeroTelephone']
+    montant_pret_demande = ET.SubElement(root, 'MontantPretDemande')
+    montant_pret_demande.text = str(informations_structurees['MontantPretDemande'])
+    duree_pret = ET.SubElement(root, 'DureePret')
+    duree_pret.text = str(informations_structurees['DureePret'])
+    description_propriete = ET.SubElement(root, 'DescriptionPropriete')
+    description_propriete_etage = ET.SubElement(description_propriete, 'Etage')
+    description_propriete_etage.text = informations_structurees['DescriptionPropriete']['Etage']
+    description_propriete_taille = ET.SubElement(description_propriete, 'Taille')
+    description_propriete_taille.text = informations_structurees['DescriptionPropriete']['Taille']
+    description_propriete_jardin = ET.SubElement(description_propriete, 'Jardin')
+    description_propriete_jardin.text = informations_structurees['DescriptionPropriete']['Jardin']
+    description_propriete_quartier = ET.SubElement(description_propriete, 'Quartier')
+    description_propriete_quartier.text = informations_structurees['DescriptionPropriete']['Quartier']
+    description_propriete_tranquilite = ET.SubElement(description_propriete, 'Tranquilite')
+    description_propriete_tranquilite.text = informations_structurees['DescriptionPropriete']['Tranquilite']
+    revenu_mensuel = ET.SubElement(root, 'RevenuMensuel')
+    revenu_mensuel.text = str(informations_structurees['RevenuMensuel'])
+    depenses_mensuelles = ET.SubElement(root, 'DepensesMensuelles')
+    depenses_mensuelles.text = str(informations_structurees['DepensesMensuelles'])
+    tree = ET.ElementTree(root)
+    tree.write(f'demande_pret_{nom_client.text}.xml')
 
-        # Crée des sous-éléments pour chaque catégorie d'informations
-        for categorie, valeur in informations_structurees.items():
-            sous_element = ET.Element(categorie)
-            sous_element.text = valeur
-            root.append(sous_element)
-
-        # Crée un objet ElementTree
-        arbre = ET.ElementTree(root)
-
-        # Enregistre l'arbre XML dans un fichier (ou vous pouvez adapter ceci pour le stockage en base de données)
-        arbre.write("informations_pret.xml")
-
-    except ET.ParseError as e:
-        # Gérer les erreurs d'analyse XML
-        return {'erreur': 'Erreur d\'analyse XML: ' + str(e)}
-    except Exception as e:
-        # Gérer d'autres erreurs possibles
-        return {'erreur': 'Erreur inattendue: ' + str(e)}
-
-    return informations_structurees
-
-# Fonction pour transmettre les informations aux services associés (fonction fictive)
 def transmettre_informations_aux_services_associés(informations_structurees):
-    # Vous pouvez appeler ici les services de Vérification de Solvabilité et d'Évaluation de la Propriété
-    # en utilisant des appels.
-
-    # Exemple d'appel au service de Vérification de Solvabilité
     solvabilité_service = ServiceVerificationSolvabilite()
     resultat_verification_solvabilite = solvabilité_service.VerifierSolvabilite(informations_structurees)
 
-    # Exemple d'appel au service d'Évaluation de la Propriété
     evaluation_propriete_service = ServiceEvaluationPropriete()
     resultat_evaluation_propriete = evaluation_propriete_service.EvaluerPropriete(informations_structurees)
-
-# Fonction pour gérer les erreurs
-def gerer_erreurs(informations_structurees):
-    # Je vérifie si j'ai pu extraire toutes les informations nécessaires.
-    # Par exemple, je m'assure d'avoir le nom du client.
-    if 'nom_client' not in informations_structurees:
-        generer_alerte('Je n\'ai pas pu extraire le nom du client.')
-
-    # Je vérifie également si l'adresse a bien été extraite.
-    if 'adresse' not in informations_structurees:
-        generer_alerte('L\'adresse n\'a pas pu être extraite.')
-
-    # Je peux ajouter d'autres mécanismes de détection d'erreurs selon mes besoins.
-
-# Fonction pour générer des alertes (à adapter selon mes besoins)
-def generer_alerte(message):
-    # Je pourrais implémenter la génération d'alertes en les enregistrant dans ma base de données,
-    # en les envoyant par courrier électronique, ou d'une autre manière qui me convient.
-    return message
-
+  
 if __name__ == '__main__':
     application = Application([ServiceExtractionInformation],
                               tns='mon_namespace',

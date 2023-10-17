@@ -6,7 +6,8 @@ url = "http://localhost:8000/ServiceExtractionInformation?wsdl"
 client = Client(url)
 
 # data prend la valeur du XML à envoyer 'johndoe.xml'
-data = 'johndoe.xml'
+# Lisez le contenu du fichier XML de la demande
+data='johndoe.xml'
 
 try:
     # Appelez la méthode du service en lui passant le JSON comme argument

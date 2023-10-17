@@ -11,7 +11,13 @@
   <NumeroTelephone>+33 123 456 789</NumeroTelephone>
   <MontantPretDemande>200000</MontantPretDemande>
   <DureePret>20</DureePret>
-  <DescriptionPropriete>Maison à deux étages avec jardin, située dans un quartier résidentiel calme</DescriptionPropriete>
+  <DescriptionPropriete>
+    <Etage>2</Etage>
+    <Taille>56</Taille>
+    <Jardin>True</Jardin>
+    <Quartier>Résidentiel</Quartier>
+    <Tranquilite>Calme</Tranquilite>    
+  </DescriptionPropriete>
   <RevenuMensuel>5000</RevenuMensuel>
   <DepensesMensuelles>3000</DepensesMensuelles>
 </DemandePret>
