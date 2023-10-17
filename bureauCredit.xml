@@ -21,4 +21,15 @@
         <PaiementRetard>1</PaiementRetard>
         <Faillite>False</Faillite>
     </Client>
+
+    <Client>
+        <ID>2</ID>
+        <Nom>
+            <PrenomClient>John</PrenomClient>
+            <NomClient>Serer</NomClient>
+        </Nom>
+        <Dette>0</Dette>
+        <PaiementRetard>0</PaiementRetard>
+        <Faillite>False</Faillite>
+    </Client>
 </ClientInformation>
