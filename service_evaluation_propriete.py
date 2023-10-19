@@ -11,7 +11,7 @@ class ServiceEvaluationPropriete(ServiceBase):
     @rpc(Unicode, _returns=Unicode)
     def EvaluerPropriete(ctx, demande_pret):
         
-        xml_demande_pret = ET.fromstring(demande_pret)
+        xml_demande_pret = ET.parse(demande_pret).getroot()
         adresse = xml_demande_pret.find('.//Adresse')
         description_propriete = xml_demande_pret.find('.//DescriptionPropriete')
         montant_pret_demande = xml_demande_pret.find('.//MontantPretDemande')
