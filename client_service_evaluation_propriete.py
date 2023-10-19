@@ -106,9 +106,18 @@ def to_service_evaluation_propiete():
     tree = ET.tostring(root)
     tree = tree.decode('utf-8')
 
+    return tree
+
+
+if __name__ == '__main__':
+    url = "http://localhost:8003/ServiceEvaluationPropriete?wsdl"
+    client = Client(url)
+
+    data = "johnDoe.xml"
+
     try:
         # Appelez la méthode du service en lui passant le XML comme argument
-        response = client.service.calculateScore(tree)
+        response = client.service.EvaluerPropriete(data)
         # Vérifiez la réponse du service
         print("Réponse du service evealuation propriete:")
         print(response)

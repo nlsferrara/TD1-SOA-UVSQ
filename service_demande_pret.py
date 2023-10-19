@@ -147,6 +147,7 @@ class DemandePret(ServiceBase):
             infoClientSolv = to_service_verification_solvabilite(infoClient)
             scoreSolvabilite = getScoringPret(infoClientSolv)
             print("Score solvabilité : ", scoreSolvabilite)
+
             return scoreSolvabilite
         except Exception as e:
             print(f"Une erreur s'est produite : {e}")

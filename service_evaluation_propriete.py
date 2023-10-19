@@ -6,6 +6,7 @@ from spyne.server.wsgi import WsgiApplication
 from spyne.util.wsgi_wrapper import run_twisted
 import xml.etree.ElementTree as ET
 
+
 class ServiceEvaluationPropriete(ServiceBase):
     @rpc(Unicode, _returns=Unicode)
     def EvaluerPropriete(ctx, demande_pret):
@@ -28,6 +29,7 @@ class ServiceEvaluationPropriete(ServiceBase):
         tree = envoie_reponse(litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier,valeur_estimee)
         
         return tree
+
 
 def analyse_donnees_marche_immobilier(adresse, description_propriete, montant_pret_demande):
     """
@@ -98,17 +100,20 @@ def analyse_donnees_marche_immobilier(adresse, description_propriete, montant_pr
                             if description_propriete_tranquilite == description_propriete.find('./Tranquilite').text:
                                 if prix_vente >= montant_pret_demande:
                                     return prix_vente
+
     return 0
 
+
 def inspection_virtuelle(valeur_estimee, annee_construction):
-    # Vous pouvez effectuer une inspection virtuelle de la propriété ici en fonction de l'adresse et de l'année de construction.
-    # Vous pouvez utiliser des images satellite ou d'autres sources d'information.
+    # Vous pouvez effectuer une inspection virtuelle de la propriété ici en fonction de l'adresse et de l'année de
+    # construction. Vous pouvez utiliser des images satellite ou d'autres sources d'information.
 
     # Exemple simplifié : si la propriété a plus de 10 ans, réduisez la valeur estimée de 10 %.
-    if annee_construction <= 2012:
+    if int(annee_construction) <= 2012:
         valeur_estimee *= 0.9
 
     return valeur_estimee
+
 
 def verifier_conformite_legale(adresse):
     # voilà le format du fichier de legislation
@@ -157,6 +162,7 @@ def verifier_conformite_legale(adresse):
                 admissible_pret_immobilier = False
             return litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier
 
+
 def envoie_reponse(litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier,valeur_estimee):
     root = ET.Element('EvaluationProprieteResponse')
     ET.SubElement(root, 'LitigesFonciersEnCours').text = str(litiges_fonciers_en_cours)
@@ -165,6 +171,7 @@ def envoie_reponse(litiges_fonciers_en_cours, conforme_reglements_batiment, admi
     ET.SubElement(root, 'ValeurEstimee').text = str(valeur_estimee)
     tree = ET.tostring(root)
     return tree.decode('utf-8')
+
 
 if __name__ == '__main__':
     application = Application([ServiceEvaluationPropriete],
