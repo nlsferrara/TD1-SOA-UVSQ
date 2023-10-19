@@ -8,14 +8,16 @@ import xml.etree.ElementTree as ET
 from suds.client import Client
 from suds import WebFault
 
+
 class ServiceExtractionInformation(ServiceBase):
     @rpc(Unicode, _returns=Unicode)
     def ExtraireInformations(ctx, demande_xml):
-        informations_structurees=ExtractionInfo(demande_xml)
+        informations_structurees = ExtractionInfo(demande_xml)
         stockage_information(informations_structurees)
         print('Demande de prêt enregistrée avec succès')
-        to_service_verification_solvabilite()
-        return
+        tree = to_service_verification_solvabilite()
+        return tree
+
 
 def ExtractionInfo(demande_xml):
     root = ET.parse(demande_xml).getroot()
@@ -78,6 +80,7 @@ def ExtractionInfo(demande_xml):
     }
     return informations_structurees
 
+
 def stockage_information(informations_structurees):
     root = ET.Element('DemandePret')
     prenom_client = ET.SubElement(root, 'PrenomClient')
@@ -119,7 +122,9 @@ def stockage_information(informations_structurees):
     tree = ET.ElementTree(root)
     tree.write(f'demande_pret_{nom_client.text}.xml')
 
+
 def lecture_bdd(xml_db='demande_pret_Doe.xml'):
+
     root = ET.parse(xml_db).getroot()
     prenom_client = root.find('.//PrenomClient')
     prenom_client = prenom_client.text if prenom_client is not None else ''
@@ -180,13 +185,11 @@ def lecture_bdd(xml_db='demande_pret_Doe.xml'):
     }
     return informations_structurees
 
+
 def to_service_verification_solvabilite():
-    # Créez un client SOAP pour le service solvabilité
-    url = "http://localhost:8001/VerifSolvabilite?wsdl"
-    client = Client(url)
-    
+
     informations_structurees = lecture_bdd()
-    
+
     root = ET.Element('DemandePret')
     prenom_client = ET.SubElement(root, 'PrenomClient')
     prenom_client.text = informations_structurees['PrenomClient']
@@ -197,25 +200,14 @@ def to_service_verification_solvabilite():
     depenses_mensuelles = ET.SubElement(root, 'DepensesMensuelles')
     depenses_mensuelles.text = str(informations_structurees['DepensesMensuelles'])
     tree = ET.tostring(root)
-    tree = tree.decode('utf-8')
+    return tree.decode('utf-8')
 
-    try:
-        # Appelez la méthode du service en lui passant le XML comme argument
-        response = client.service.calculateScore(tree)
-        # Vérifiez la réponse du service
-        print("Réponse du service solvabilité:")
-        print(response)
-    except WebFault as e:
-        # En cas d'erreur, imprimez le message d'erreur
-        print(f"Erreur lors de l'appel au service : {e}")
-    except Exception as e:
-        # Gérez d'autres exceptions possibles ici
-        print(f"Une erreur s'est produite : {e}")
-    
+
 def to_service_evaluation_propriete(informations_structurees):
     evaluation_propriete_service = ServiceEvaluationPropriete()
     resultat_evaluation_propriete = evaluation_propriete_service.EvaluerPropriete(informations_structurees)
-  
+
+
 if __name__ == '__main__':
     application = Application([ServiceExtractionInformation],
                               tns='ServiceExtractionInformation',
