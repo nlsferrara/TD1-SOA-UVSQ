@@ -84,6 +84,8 @@ def lecture_bdd(xml_db):
     description_propriete_quartier = description_propriete_quartier.text if description_propriete_quartier is not None else ''
     description_propriete_tranquilite = root.find('.//DescriptionPropriete/Tranquilite')
     description_propriete_tranquilite = description_propriete_tranquilite.text if description_propriete_tranquilite is not None else ''
+    description_propriete_annnee_construction = root.find('.//DescriptionPropriete/AnneeConstruction')
+    description_propriete_annnee_construction = int(description_propriete_annnee_construction.text) if description_propriete_annnee_construction is not None else 0
     revenu_mensuel = root.find('.//RevenuMensuel')
     revenu_mensuel = int(revenu_mensuel.text) if revenu_mensuel is not None else 0
     depenses_mensuelles = root.find('.//DepensesMensuelles')
@@ -106,7 +108,8 @@ def lecture_bdd(xml_db):
             'Taille': description_propriete_taille,
             'Jardin': description_propriete_jardin,
             'Quartier': description_propriete_quartier,
-            'Tranquilite': description_propriete_tranquilite
+            'Tranquilite': description_propriete_tranquilite,
+            'AnneeConstruction': description_propriete_annnee_construction
         },
         'RevenuMensuel': revenu_mensuel,
         'DepensesMensuelles': depenses_mensuelles

@@ -39,6 +39,8 @@ def lecture_bdd(xml_db='demande_pret_Doe.xml'):
     description_propriete_quartier = description_propriete_quartier.text if description_propriete_quartier is not None else ''
     description_propriete_tranquilite = root.find('.//DescriptionPropriete/Tranquilite')
     description_propriete_tranquilite = description_propriete_tranquilite.text if description_propriete_tranquilite is not None else ''
+    description_propriete_annnee_construction = root.find('.//DescriptionPropriete/AnneeConstruction')
+    description_propriete_annnee_construction = int(description_propriete_annnee_construction.text) if description_propriete_annnee_construction is not None else 0
     revenu_mensuel = root.find('.//RevenuMensuel')
     revenu_mensuel = int(revenu_mensuel.text) if revenu_mensuel is not None else 0
     depenses_mensuelles = root.find('.//DepensesMensuelles')
@@ -61,7 +63,8 @@ def lecture_bdd(xml_db='demande_pret_Doe.xml'):
             'Taille': description_propriete_taille,
             'Jardin': description_propriete_jardin,
             'Quartier': description_propriete_quartier,
-            'Tranquilite': description_propriete_tranquilite
+            'Tranquilite': description_propriete_tranquilite,
+            'AnneeConstruction': description_propriete_annnee_construction
         },
         'RevenuMensuel': revenu_mensuel,
         'DepensesMensuelles': depenses_mensuelles
@@ -70,7 +73,7 @@ def lecture_bdd(xml_db='demande_pret_Doe.xml'):
 
 def to_service_evaluation_propiete():
     # Créez un client SOAP pour le service solvabilité
-    url = "http://localhost:8002/ServiceEvaluationPropriete?wsdl"
+    url = "http://localhost:8003/ServiceEvaluationPropriete?wsdl"
     client = Client(url)
     
     informations_structurees = lecture_bdd()
@@ -98,6 +101,8 @@ def to_service_evaluation_propiete():
     description_propriete_quartier.text = informations_structurees['DescriptionPropriete']['Quartier']
     description_propriete_tranquilite = ET.SubElement(description_propriete, 'Tranquilite')
     description_propriete_tranquilite.text = informations_structurees['DescriptionPropriete']['Tranquilite']
+    description_propriete_annnee_construction = ET.SubElement(description_propriete, 'AnneeConstruction')
+    description_propriete_annnee_construction.text = str(informations_structurees['DescriptionPropriete']['AnneeConstruction'])
     tree = ET.tostring(root)
     tree = tree.decode('utf-8')
 

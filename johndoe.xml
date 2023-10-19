@@ -16,7 +16,8 @@
     <Taille>56</Taille>
     <Jardin>True</Jardin>
     <Quartier>Résidentiel</Quartier>
-    <Tranquilite>Calme</Tranquilite>    
+    <Tranquilite>Calme</Tranquilite>  
+    <AnneeConstruction>2010</AnneeConstruction>  
   </DescriptionPropriete>
   <RevenuMensuel>5000</RevenuMensuel>
   <DepensesMensuelles>3000</DepensesMensuelles>

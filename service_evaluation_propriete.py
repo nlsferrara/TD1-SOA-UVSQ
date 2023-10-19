@@ -7,7 +7,7 @@ from spyne.util.wsgi_wrapper import run_twisted
 import xml.etree.ElementTree as ET
 
 class ServiceEvaluationPropriete(ServiceBase):
-    @rpc(Unicode, Integer, _returns=Unicode)
+    @rpc(Unicode, _returns=Unicode)
     def EvaluerPropriete(ctx, demande_pret):
         
         xml_demande_pret = ET.fromstring(demande_pret)
@@ -15,7 +15,7 @@ class ServiceEvaluationPropriete(ServiceBase):
         description_propriete = xml_demande_pret.find('.//DescriptionPropriete')
         montant_pret_demande = xml_demande_pret.find('.//MontantPretDemande')
         annee_construction = xml_demande_pret.find('.//AnneeConstruction')
-        
+
         # 1. Analyse des Données du Marché Immobilier
         valeur_estimee = analyse_donnees_marche_immobilier(adresse, description_propriete, montant_pret_demande)
         
@@ -23,12 +23,11 @@ class ServiceEvaluationPropriete(ServiceBase):
         valeur_estimee = inspection_virtuelle(valeur_estimee, annee_construction)
 
         # 3. Conformité Légale et Réglementaire
-        est_conforme = verifier_conformite_legale(adresse)
+        litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier = verifier_conformite_legale(adresse)
 
-        if est_conforme:
-            return "La propriété est estimée à {} EUR.".format(valeur_estimee)
-        else:
-            return "La propriété ne satisfait pas aux normes légales et réglementaires."
+        tree = envoie_reponse(litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier,valeur_estimee)
+        
+        return tree
 
 def analyse_donnees_marche_immobilier(adresse, description_propriete, montant_pret_demande):
     """
@@ -88,6 +87,7 @@ def analyse_donnees_marche_immobilier(adresse, description_propriete, montant_pr
         description_propriete_quartier = description_propriete_quartier.text if description_propriete_quartier is not None else ''
         description_propriete_tranquilite = vente.find('./DescriptionPropriete/Tranquilite')
         description_propriete_tranquilite = description_propriete_tranquilite.text if description_propriete_tranquilite is not None else ''
+        
         prix_vente = vente.find('./PrixVente')
         prix_vente = int(prix_vente.text) if prix_vente is not None else -1
         if adresse['Ville'] == ville:
@@ -128,6 +128,9 @@ def verifier_conformite_legale(adresse):
         <Propiete>
     </EvaluationProprieteRequest>
     """
+    litiges_fonciers_en_cours = False
+    conforme_reglements_batiment = True
+    admissible_pret_immobilier = True
     xml_legislation = 'legislation.xml'
     root = ET.parse(xml_legislation).getroot()
     for propriete in root.findall('Propriete'):
@@ -147,13 +150,21 @@ def verifier_conformite_legale(adresse):
             admissible_pret_immobilier = propriete.find('.//AdmissiblePretImmobilier')
             admissible_pret_immobilier = admissible_pret_immobilier.text if admissible_pret_immobilier is not None else ''
             if litiges_fonciers_en_cours == 'true':
-                return False
+                litiges_fonciers_en_cours = True
             elif conforme_reglements_batiment == 'false':
-                return False
+                conforme_reglements_batiment = False
             elif admissible_pret_immobilier == 'false':
-                return False
-            else:
-                return True
+                admissible_pret_immobilier = False
+            return litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier
+
+def envoie_reponse(litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier,valeur_estimee):
+    root = ET.Element('EvaluationProprieteResponse')
+    ET.SubElement(root, 'LitigesFonciersEnCours').text = str(litiges_fonciers_en_cours)
+    ET.SubElement(root, 'ConformeReglementsBatiment').text = str(conforme_reglements_batiment)
+    ET.SubElement(root, 'AdmissiblePretImmobilier').text = str(admissible_pret_immobilier)
+    ET.SubElement(root, 'ValeurEstimee').text = str(valeur_estimee)
+    tree = ET.tostring(root)
+    return tree.decode('utf-8')
 
 if __name__ == '__main__':
     application = Application([ServiceEvaluationPropriete],
@@ -167,4 +178,4 @@ if __name__ == '__main__':
         (wsgi_app, b'ServiceEvaluationPropriete')
     ]
 
-    sys.exit(run_twisted(twisted_apps, 8002))
+    sys.exit(run_twisted(twisted_apps, 8003))
