@@ -42,6 +42,8 @@ class VerifSolvabilite(ServiceBase):
         prenom = tree2.find('.//PrenomClient').text
         infoClient = getInfoClientBureauCredit(getClientId(nom, prenom))
         print('infoClient ', infoClient)
+        revenu = tree2.find('.//RevenuMensuel').text
+        depense = tree2.find('.//DepensesMensuelles').text
         score = 0
         # Votre logique de calcul de score ici
         dette = int(infoClient['dette'])
