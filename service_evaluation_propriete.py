@@ -14,8 +14,8 @@ class ServiceEvaluationPropriete(ServiceBase):
         xml_demande_pret = ET.parse(demande_pret).getroot()
         adresse = xml_demande_pret.find('.//Adresse')
         description_propriete = xml_demande_pret.find('.//DescriptionPropriete')
-        montant_pret_demande = xml_demande_pret.find('.//MontantPretDemande')
-        annee_construction = xml_demande_pret.find('.//AnneeConstruction')
+        montant_pret_demande = xml_demande_pret.find('.//MontantPretDemande').text
+        annee_construction = xml_demande_pret.find('.//AnneeConstruction').text
 
         # 1. Analyse des Données du Marché Immobilier
         valeur_estimee = analyse_donnees_marche_immobilier(adresse, description_propriete, montant_pret_demande)
@@ -68,7 +68,7 @@ def analyse_donnees_marche_immobilier(adresse, description_propriete, montant_pr
         </Vente>
     </VentesRecentes>
     """
-    xml= 'ventes_recentes.xml'
+    xml= 'historique_vente.xml'
     root = ET.parse(xml).getroot()
     for vente in root.findall('Vente'):
         rue = vente.find('./Adresse/Rue')
@@ -92,13 +92,14 @@ def analyse_donnees_marche_immobilier(adresse, description_propriete, montant_pr
         
         prix_vente = vente.find('./PrixVente')
         prix_vente = int(prix_vente.text) if prix_vente is not None else -1
-        if adresse['Ville'] == ville:
+        
+        if ville == adresse.find('./Ville').text:
             if description_propriete_etage == description_propriete.find('./Etage').text:
                 if description_propriete_taille == description_propriete.find('./Taille').text:
                     if description_propriete_jardin == description_propriete.find('./Jardin').text:
                         if description_propriete_quartier == description_propriete.find('./Quartier').text:
                             if description_propriete_tranquilite == description_propriete.find('./Tranquilite').text:
-                                if prix_vente >= montant_pret_demande:
+                                if int(prix_vente) >= int(montant_pret_demande):
                                     return prix_vente
 
     return 0
@@ -119,7 +120,7 @@ def verifier_conformite_legale(adresse):
     # voilà le format du fichier de legislation
     """
     <EvaluationProprieteRequest>
-        <Propiete>
+        <Propriete>
             <Adresse>
             <Rue>123, rue de la Rue</Rue>
             <Ville>Villeville</Ville>
@@ -130,12 +131,12 @@ def verifier_conformite_legale(adresse):
             <LitigesFonciersEnCours>false</LitigesFonciersEnCours>
             <ConformeReglementsBatiment>true</ConformeReglementsBatiment>
             <AdmissiblePretImmobilier>true</AdmissiblePretImmobilier>
-        <Propiete>
+        </Propriete>
     </EvaluationProprieteRequest>
     """
-    litiges_fonciers_en_cours = False
-    conforme_reglements_batiment = True
-    admissible_pret_immobilier = True
+    litiges_fonciers_en_cours = 'false'
+    conforme_reglements_batiment = 'true'
+    admissible_pret_immobilier = 'true'
     xml_legislation = 'legislation.xml'
     root = ET.parse(xml_legislation).getroot()
     for propriete in root.findall('Propriete'):
@@ -147,19 +148,13 @@ def verifier_conformite_legale(adresse):
         code_postal = code_postal.text if code_postal is not None else ''
         pays = propriete.find('.//Pays')
         pays = pays.text if pays is not None else ''
-        if rue == adresse['Rue'] and ville == adresse['Ville'] and code_postal == adresse['CodePostal'] and pays == adresse['Pays']:
+        if rue == adresse.find('.//Rue').text and ville == adresse.find('.//Ville').text and code_postal == adresse.find('.//CodePostal').text and pays == adresse.find('.//Pays').text:
             litiges_fonciers_en_cours = propriete.find('.//LitigesFonciersEnCours')
             litiges_fonciers_en_cours = litiges_fonciers_en_cours.text if litiges_fonciers_en_cours is not None else ''
             conforme_reglements_batiment = propriete.find('.//ConformeReglementsBatiment')
             conforme_reglements_batiment = conforme_reglements_batiment.text if conforme_reglements_batiment is not None else ''
             admissible_pret_immobilier = propriete.find('.//AdmissiblePretImmobilier')
             admissible_pret_immobilier = admissible_pret_immobilier.text if admissible_pret_immobilier is not None else ''
-            if litiges_fonciers_en_cours == 'true':
-                litiges_fonciers_en_cours = True
-            elif conforme_reglements_batiment == 'false':
-                conforme_reglements_batiment = False
-            elif admissible_pret_immobilier == 'false':
-                admissible_pret_immobilier = False
             return litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier
 
 
