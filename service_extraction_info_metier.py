@@ -13,10 +13,12 @@ class ServiceExtractionInformation(ServiceBase):
     @rpc(Unicode, _returns=Unicode)
     def ExtraireInformations(ctx, demande_xml):
         informations_structurees = ExtractionInfo(demande_xml)
-        stockage_information(informations_structurees)
+        nom_client=stockage_information(informations_structurees)
+        xml_db = find_db_client(nom_client)
+        #tree = lecture_bdd(xml_db)
         print('Demande de prêt enregistrée avec succès')
-        tree = to_service_verification_solvabilite()
-        return tree
+        #tree = to_service_verification_solvabilite()
+        return xml_db #tree
 
 
 def ExtractionInfo(demande_xml):
@@ -121,9 +123,13 @@ def stockage_information(informations_structurees):
     depenses_mensuelles.text = str(informations_structurees['DepensesMensuelles'])
     tree = ET.ElementTree(root)
     tree.write(f'demande_pret_{nom_client.text}.xml')
+    return nom_client.text
+
+def find_db_client(nom_client):
+    return f'demande_pret_{nom_client}.xml'
 
 
-def lecture_bdd(xml_db='demande_pret_Doe.xml'):
+def lecture_bdd(xml_db):
 
     root = ET.parse(xml_db).getroot()
     prenom_client = root.find('.//PrenomClient')
@@ -184,29 +190,6 @@ def lecture_bdd(xml_db='demande_pret_Doe.xml'):
         'DepensesMensuelles': depenses_mensuelles
     }
     return informations_structurees
-
-
-def to_service_verification_solvabilite():
-
-    informations_structurees = lecture_bdd()
-
-    root = ET.Element('DemandePret')
-    prenom_client = ET.SubElement(root, 'PrenomClient')
-    prenom_client.text = informations_structurees['PrenomClient']
-    nom_client = ET.SubElement(root, 'NomClient')
-    nom_client.text = informations_structurees['NomClient']
-    revenu_mensuel = ET.SubElement(root, 'RevenuMensuel')
-    revenu_mensuel.text = str(informations_structurees['RevenuMensuel'])
-    depenses_mensuelles = ET.SubElement(root, 'DepensesMensuelles')
-    depenses_mensuelles.text = str(informations_structurees['DepensesMensuelles'])
-    tree = ET.tostring(root)
-    return tree.decode('utf-8')
-
-
-def to_service_evaluation_propriete(informations_structurees):
-    evaluation_propriete_service = ServiceEvaluationPropriete()
-    resultat_evaluation_propriete = evaluation_propriete_service.EvaluerPropriete(informations_structurees)
-
 
 if __name__ == '__main__':
     application = Application([ServiceExtractionInformation],
