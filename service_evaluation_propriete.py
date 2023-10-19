@@ -4,14 +4,22 @@ from spyne import ServiceBase, Unicode, Application, rpc, Integer
 from spyne.protocol.soap import Soap11
 from spyne.server.wsgi import WsgiApplication
 from spyne.util.wsgi_wrapper import run_twisted
+import xml.etree.ElementTree as ET
 
 class ServiceEvaluationPropriete(ServiceBase):
     @rpc(Unicode, Integer, _returns=Unicode)
-    def EvaluerPropriete(ctx, adresse, annee_construction):
+    def EvaluerPropriete(ctx, demande_pret):
+        
+        xml_demande_pret = ET.fromstring(demande_pret)
+        adresse = xml_demande_pret.find('.//Adresse')
+        description_propriete = xml_demande_pret.find('.//DescriptionPropriete')
+        montant_pret_demande = xml_demande_pret.find('.//MontantPretDemande')
+        annee_construction = xml_demande_pret.find('.//AnneeConstruction')
+        
         # 1. Analyse des Données du Marché Immobilier
-        valeur_estimee = analyse_donnees_marche_immobilier(adresse)
-
-        # 2. Inspection Virtuelle ou sur Place (Supposons une évaluation virtuelle ici)
+        valeur_estimee = analyse_donnees_marche_immobilier(adresse, description_propriete, montant_pret_demande)
+        
+        # 2. Inspection Virtuelle
         valeur_estimee = inspection_virtuelle(valeur_estimee, annee_construction)
 
         # 3. Conformité Légale et Réglementaire
@@ -22,14 +30,75 @@ class ServiceEvaluationPropriete(ServiceBase):
         else:
             return "La propriété ne satisfait pas aux normes légales et réglementaires."
 
-def analyse_donnees_marche_immobilier(adresse):
-    # Ici, vous pouvez intégrer une base de données contenant des informations sur les ventes de biens similaires
-    # dans la région pour estimer la valeur de la propriété en fonction des prix du marché actuels.
-    # Cela dépendra de l'accès à ces données dans votre environnement.
-
-    # Exemple simplifié : supposons que la valeur soit basée sur l'adresse.
-    valeur_estimee = 250000
-    return valeur_estimee
+def analyse_donnees_marche_immobilier(adresse, description_propriete, montant_pret_demande):
+    """
+    <VentesRecentes>
+        <Vente>
+            <Adresse>
+                <Rue>123, rue de la Rue</Rue>
+                <Ville>Villeville</Ville>
+                <CodePostal>75000</CodePostal>
+                <Pays>France</Pays>
+            </Adresse>
+            <PrixVente>250000</PrixVente>
+            <DescriptionPropriete>
+                <Etage>2</Etage>
+                <Taille>56</Taille>
+                <Jardin>True</Jardin>
+                <Quartier>Résidentiel</Quartier>
+                <Tranquilite>Calme</Tranquilite>    
+            </DescriptionPropriete>
+        </Vente>
+        <Vente>
+            <Adresse>
+                <Rue>456, avenue de l'Avenue</Rue>
+                <Ville>Villeville</Ville>
+                <CodePostal>75000</CodePostal>
+                <Pays>France</Pays>
+            </Adresse>
+            <PrixVente>220000</PrixVente>
+            <DescriptionPropriete>
+                <Etage>1</Etage>
+                <Taille>60</Taille>
+                <Jardin>False</Jardin>
+                <Quartier>Central</Quartier>
+                <Tranquilite>Animé</Tranquilite>    
+            </DescriptionPropriete>
+        </Vente>
+    </VentesRecentes>
+    """
+    xml= 'ventes_recentes.xml'
+    root = ET.parse(xml).getroot()
+    for vente in root.findall('Vente'):
+        rue = vente.find('./Adresse/Rue')
+        rue = rue.text if rue is not None else ''
+        ville = vente.find('./Adresse/Ville')
+        ville = ville.text if ville is not None else ''
+        code_postal = vente.find('./Adresse/CodePostal')
+        code_postal = code_postal.text if code_postal is not None else ''
+        pays = vente.find('./Adresse/Pays')
+        pays = pays.text if pays is not None else ''
+        description_propriete_etage = vente.find('./DescriptionPropriete/Etage')
+        description_propriete_etage = description_propriete_etage.text if description_propriete_etage is not None else ''
+        description_propriete_taille = vente.find('./DescriptionPropriete/Taille')
+        description_propriete_taille = description_propriete_taille.text if description_propriete_taille is not None else ''
+        description_propriete_jardin = vente.find('./DescriptionPropriete/Jardin')
+        description_propriete_jardin = description_propriete_jardin.text if description_propriete_jardin is not None else ''
+        description_propriete_quartier = vente.find('./DescriptionPropriete/Quartier')
+        description_propriete_quartier = description_propriete_quartier.text if description_propriete_quartier is not None else ''
+        description_propriete_tranquilite = vente.find('./DescriptionPropriete/Tranquilite')
+        description_propriete_tranquilite = description_propriete_tranquilite.text if description_propriete_tranquilite is not None else ''
+        prix_vente = vente.find('./PrixVente')
+        prix_vente = int(prix_vente.text) if prix_vente is not None else -1
+        if adresse['Ville'] == ville:
+            if description_propriete_etage == description_propriete.find('./Etage').text:
+                if description_propriete_taille == description_propriete.find('./Taille').text:
+                    if description_propriete_jardin == description_propriete.find('./Jardin').text:
+                        if description_propriete_quartier == description_propriete.find('./Quartier').text:
+                            if description_propriete_tranquilite == description_propriete.find('./Tranquilite').text:
+                                if prix_vente >= montant_pret_demande:
+                                    return prix_vente
+    return 0
 
 def inspection_virtuelle(valeur_estimee, annee_construction):
     # Vous pouvez effectuer une inspection virtuelle de la propriété ici en fonction de l'adresse et de l'année de construction.
@@ -42,16 +111,53 @@ def inspection_virtuelle(valeur_estimee, annee_construction):
     return valeur_estimee
 
 def verifier_conformite_legale(adresse):
-    # Vous pouvez effectuer des vérifications pour vous assurer que la propriété est conforme aux normes légales et réglementaires.
-    # Cela peut inclure des vérifications pour s'assurer qu'il n'y a pas de litiges fonciers en cours, que la propriété est
-    # construite conformément aux règlements du bâtiment, et qu'elle est admissible à un prêt immobilier.
-
-    # Exemple simplifié : supposons que la propriété est conforme.
-    return True
+    # voilà le format du fichier de legislation
+    """
+    <EvaluationProprieteRequest>
+        <Propiete>
+            <Adresse>
+            <Rue>123, rue de la Rue</Rue>
+            <Ville>Villeville</Ville>
+            <CodePostal>75000</CodePostal>
+            <Pays>France</Pays>
+            </Adresse>
+            <AnneeConstruction>2010</AnneeConstruction>
+            <LitigesFonciersEnCours>false</LitigesFonciersEnCours>
+            <ConformeReglementsBatiment>true</ConformeReglementsBatiment>
+            <AdmissiblePretImmobilier>true</AdmissiblePretImmobilier>
+        <Propiete>
+    </EvaluationProprieteRequest>
+    """
+    xml_legislation = 'legislation.xml'
+    root = ET.parse(xml_legislation).getroot()
+    for propriete in root.findall('Propriete'):
+        rue = propriete.find('.//Rue')
+        rue = rue.text if rue is not None else ''
+        ville = propriete.find('.//Ville')
+        ville = ville.text if ville is not None else ''
+        code_postal = propriete.find('.//CodePostal')
+        code_postal = code_postal.text if code_postal is not None else ''
+        pays = propriete.find('.//Pays')
+        pays = pays.text if pays is not None else ''
+        if rue == adresse['Rue'] and ville == adresse['Ville'] and code_postal == adresse['CodePostal'] and pays == adresse['Pays']:
+            litiges_fonciers_en_cours = propriete.find('.//LitigesFonciersEnCours')
+            litiges_fonciers_en_cours = litiges_fonciers_en_cours.text if litiges_fonciers_en_cours is not None else ''
+            conforme_reglements_batiment = propriete.find('.//ConformeReglementsBatiment')
+            conforme_reglements_batiment = conforme_reglements_batiment.text if conforme_reglements_batiment is not None else ''
+            admissible_pret_immobilier = propriete.find('.//AdmissiblePretImmobilier')
+            admissible_pret_immobilier = admissible_pret_immobilier.text if admissible_pret_immobilier is not None else ''
+            if litiges_fonciers_en_cours == 'true':
+                return False
+            elif conforme_reglements_batiment == 'false':
+                return False
+            elif admissible_pret_immobilier == 'false':
+                return False
+            else:
+                return True
 
 if __name__ == '__main__':
     application = Application([ServiceEvaluationPropriete],
-                              tns='votre_namespace',
+                              tns='ServiceEvaluationPropriete',
                               in_protocol=Soap11(validator='lxml'),
                               out_protocol=Soap11())
 
@@ -61,4 +167,4 @@ if __name__ == '__main__':
         (wsgi_app, b'ServiceEvaluationPropriete')
     ]
 
-    sys.exit(run_twisted(twisted_apps, 8000))
+    sys.exit(run_twisted(twisted_apps, 8002))
