@@ -50,9 +50,55 @@ def getScoringPret(tree):
     except Exception as e:
         # Gérez d'autres exceptions possibles ici
         print(f"Une erreur s'est produite : {e}")
-        
-def lecture_bdd(xml_db):
 
+
+def getApprobationPret(evalProp, infoClient, scoreSolvabilite):
+    # Créez un client SOAP pour le service approbation
+    url = "http://localhost:8004/DecisionApprobation?wsdl"
+    client = Client(url, cache=None)
+
+    try:
+
+        # Appelez la méthode du service en lui passant le XML comme argument
+        response = client.service.approbationPret(evalProp, infoClient, scoreSolvabilite)
+
+        # Vérifiez la réponse du service
+        print("Réponse du service approbation:")
+        print(f"Response : {response}")
+
+        return response
+    except WebFault as e:
+        # En cas d'erreur, imprimez le message d'erreur
+        print(f"Erreur lors de l'appel au service : {e}")
+    except Exception as e:
+        # Gérez d'autres exceptions possibles ici
+        print(f"Une erreur s'est produite : {e}")
+
+
+def getEvalProp(infoProp):
+    # Créez un client SOAP pour le service approbation
+    url = "http://localhost:8003/ServiceEvaluationPropriete?wsdl"
+    client = Client(url, cache=None)
+
+    try:
+
+        # Appelez la méthode du service en lui passant le XML comme argument
+        response = client.service.EvaluerPropriete(infoProp)
+
+        # Vérifiez la réponse du service
+        print("Réponse du service eval prop:")
+        print(f"Response : {response}")
+
+        return response
+    except WebFault as e:
+        # En cas d'erreur, imprimez le message d'erreur
+        print(f"Erreur lors de l'appel au service : {e}")
+    except Exception as e:
+        # Gérez d'autres exceptions possibles ici
+        print(f"Une erreur s'est produite : {e}")
+
+
+def lecture_bdd(xml_db):
     root = ET.parse(xml_db).getroot()
     prenom_client = root.find('.//PrenomClient')
     prenom_client = prenom_client.text if prenom_client is not None else ''
@@ -85,7 +131,8 @@ def lecture_bdd(xml_db):
     description_propriete_tranquilite = root.find('.//DescriptionPropriete/Tranquilite')
     description_propriete_tranquilite = description_propriete_tranquilite.text if description_propriete_tranquilite is not None else ''
     description_propriete_annnee_construction = root.find('.//DescriptionPropriete/AnneeConstruction')
-    description_propriete_annnee_construction = int(description_propriete_annnee_construction.text) if description_propriete_annnee_construction is not None else 0
+    description_propriete_annnee_construction = int(
+        description_propriete_annnee_construction.text) if description_propriete_annnee_construction is not None else 0
     revenu_mensuel = root.find('.//RevenuMensuel')
     revenu_mensuel = int(revenu_mensuel.text) if revenu_mensuel is not None else 0
     depenses_mensuelles = root.find('.//DepensesMensuelles')
@@ -116,8 +163,8 @@ def lecture_bdd(xml_db):
     }
     return informations_structurees
 
-def to_service_verification_solvabilite(lecture_xml_db):
 
+def to_service_verification_solvabilite(lecture_xml_db):
     informations_structurees = lecture_xml_db
 
     root = ET.Element('DemandePret')
@@ -132,10 +179,10 @@ def to_service_verification_solvabilite(lecture_xml_db):
     tree = ET.tostring(root)
     return tree.decode('utf-8')
 
-def to_service_evaluation_propriete(lecture_xml_db):
 
+def to_service_evaluation_propriete(lecture_xml_db):
     informations_structurees = lecture_xml_db
-    
+
     root = ET.Element('DemandePret')
     adresse = ET.SubElement(root, 'Adresse')
     adresse_rue = ET.SubElement(adresse, 'Rue')
@@ -160,11 +207,31 @@ def to_service_evaluation_propriete(lecture_xml_db):
     description_propriete_tranquilite = ET.SubElement(description_propriete, 'Tranquilite')
     description_propriete_tranquilite.text = informations_structurees['DescriptionPropriete']['Tranquilite']
     description_propriete_annnee_construction = ET.SubElement(description_propriete, 'AnneeConstruction')
-    description_propriete_annnee_construction.text = str(informations_structurees['DescriptionPropriete']['AnneeConstruction'])
+    description_propriete_annnee_construction.text = str(
+        informations_structurees['DescriptionPropriete']['AnneeConstruction'])
     tree = ET.tostring(root)
     tree = tree.decode('utf-8')
 
     return tree
+
+
+def to_service_approbation_pret(lecture_xml_db):
+    informations_structurees = lecture_xml_db
+
+    root = ET.Element('DemandePret')
+    revenu_mensuel = ET.SubElement(root, 'RevenuMensuel')
+    revenu_mensuel.text = str(informations_structurees['RevenuMensuel'])
+    depenses_mensuelles = ET.SubElement(root, 'DepensesMensuelles')
+    depenses_mensuelles.text = str(informations_structurees['DepensesMensuelles'])
+    montant_pret_demande = ET.SubElement(root, 'MontantPretDemande')
+    montant_pret_demande.text = str(informations_structurees['MontantPretDemande'])
+    duree_pret_demande = ET.SubElement(root, 'DureePret')
+    duree_pret_demande.text = str(informations_structurees['DureePret'])
+    tree = ET.tostring(root)
+    tree = tree.decode('utf-8')
+
+    return tree
+
 
 class DemandePret(ServiceBase):
 
@@ -175,17 +242,20 @@ class DemandePret(ServiceBase):
             infoClient = lecture_bdd(xml_db)
             infoClientSolv = to_service_verification_solvabilite(infoClient)
             scoreSolvabilite = getScoringPret(infoClientSolv)
-            print("Score solvabilité : ", scoreSolvabilite)
+
             tree_eval_prop = to_service_evaluation_propriete(infoClient)
-            print("tree_eval_prop : ", tree_eval_prop)
-            return 
+            eval_prop = getEvalProp(tree_eval_prop)
+
+            infoClientAprob = to_service_approbation_pret(infoClient)
+            approbationPret = getApprobationPret(eval_prop, infoClientAprob, scoreSolvabilite)
+
+            return approbationPret
         except Exception as e:
             print(f"Une erreur s'est produite : {e}")
             # Vous pouvez retourner une valeur ou un message d'erreur personnalisé ici
 
 
 if __name__ == '__main__':
-
     application = Application([DemandePret],
                               tns='DemandePret',
                               in_protocol=Soap11(validator='lxml'),
