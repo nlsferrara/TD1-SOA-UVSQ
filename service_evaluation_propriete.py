@@ -11,7 +11,8 @@ class ServiceEvaluationPropriete(ServiceBase):
     @rpc(Unicode, _returns=Unicode)
     def EvaluerPropriete(ctx, demande_pret):
         
-        xml_demande_pret = ET.parse(demande_pret).getroot()
+        xml_demande_pret = ET.fromstring(demande_pret)
+
         adresse = xml_demande_pret.find('.//Adresse')
         description_propriete = xml_demande_pret.find('.//DescriptionPropriete')
         montant_pret_demande = xml_demande_pret.find('.//MontantPretDemande').text
@@ -26,8 +27,8 @@ class ServiceEvaluationPropriete(ServiceBase):
         # 3. Conformité Légale et Réglementaire
         litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier = verifier_conformite_legale(adresse)
 
-        tree = envoie_reponse(litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier,valeur_estimee)
-        
+        tree = envoie_reponse(litiges_fonciers_en_cours, conforme_reglements_batiment, admissible_pret_immobilier, valeur_estimee)
+
         return tree
 
 
