@@ -1,3 +1,4 @@
+import xml.etree.ElementTree as ET
 from suds.client import Client
 from suds import WebFault
 
@@ -10,11 +11,19 @@ if __name__ == '__main__':
 
     # data prend la valeur du XML à envoyer 'johndoe.xml'
     # Lisez le contenu du fichier XML de la demande
-    data = 'johndoe.xml'
+    data = 'johnserer.xml'
 
     try:
         # Appelez la méthode du service en lui passant le XML comme argument
         response = client.service.demandePret(data)
+
+        print("Bonjour, voici ma demande de prêt :")
+
+        # Ouvrir et analyser le fichier XML
+        tree = ET.parse(data)
+
+        # Convertir l'arbre XML en une chaîne de caractères
+        print(ET.tostring(tree.getroot(), encoding='utf-8').decode('utf-8'))
 
         # Vérifiez la réponse du service
         if response:
